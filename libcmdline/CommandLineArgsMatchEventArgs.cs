@@ -16,19 +16,17 @@
 
 using System;
 
-namespace libcmdline
-{
+namespace libcmdline {
 	/// <summary>
-	/// Container for a command line switch and its value. 
+	/// Container for a command line switch and its value.
 	/// </summary>
-	public class CommandLineArgsMatchEventArgs : EventArgs
-	{
-		string @switch;
-		string value;
-		bool isValidSwitch = true;
+	public class CommandLineArgsMatchEventArgs : EventArgs {
+		private string @switch;
+		private string value;
+		private bool isValidSwitch = true;
 
 		/// <summary>
-		/// The command line switch. 
+		/// The command line switch.
 		/// </summary>
 		public string Switch {
 			get {
@@ -37,7 +35,7 @@ namespace libcmdline
 		}
 
 		/// <summary>
-		/// The value given with the command line switch. 
+		/// The value given with the command line switch.
 		/// </summary>
 		public string Value {
 			get {
@@ -46,7 +44,7 @@ namespace libcmdline
 		}
 
 		/// <summary>
-		/// Was this switch valid? 
+		/// Was this switch valid?
 		/// </summary>
 		public bool IsValidSwitch {
 			get {
@@ -55,7 +53,7 @@ namespace libcmdline
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		/// <param name="switch"></param>
 		/// <param name="value"></param>
@@ -64,7 +62,7 @@ namespace libcmdline
 		}
 
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		/// <param name="switch"></param>
 		/// <param name="value"></param>

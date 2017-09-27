@@ -18,59 +18,59 @@ using System;
 
 namespace libcmdline {
 	/// <summary>
-	/// Container for a command line switch and its value.
+	/// Container for a command line option and its argument.
 	/// </summary>
-	public class CommandLineArgsMatchEventArgs : EventArgs {
-		private string @switch;
-		private string value;
-		private bool isValidSwitch = true;
+	public class OptionEventArgs : EventArgs {
+		private string @option;
+		private string argument;
+		private bool isValidOption = true;
 
 		/// <summary>
-		/// The command line switch.
+		/// The command line option.
 		/// </summary>
-		public string Switch {
+		public string Option {
 			get {
-				return this.@switch;
+				return this.@option;
 			}
 		}
 
 		/// <summary>
-		/// The value given with the command line switch.
+		/// The argument given with the command line option.
 		/// </summary>
-		public string Value {
+		public string Argument {
 			get {
-				return this.value;
+				return this.argument;
 			}
 		}
 
 		/// <summary>
-		/// Was this switch valid?
+		/// Indicates whether this is a valid option.
 		/// </summary>
-		public bool IsValidSwitch {
+		public bool IsValidOption {
 			get {
-				return this.isValidSwitch;
+				return this.isValidOption;
 			}
 		}
 
 		/// <summary>
 		///
 		/// </summary>
-		/// <param name="switch"></param>
-		/// <param name="value"></param>
-		public CommandLineArgsMatchEventArgs(string @switch, string value) :
-			this(@switch, value, true) {
+		/// <param name="option"></param>
+		/// <param name="argument"></param>
+		public OptionEventArgs(string @option, string argument) :
+			this(@option, argument, true) {
 		}
 
 		/// <summary>
 		///
 		/// </summary>
-		/// <param name="switch"></param>
-		/// <param name="value"></param>
-		/// <param name="isValidSwitch"></param>
-		public CommandLineArgsMatchEventArgs(string @switch, string value, bool isValidSwitch) {
-			this.@switch = @switch;
-			this.value = value;
-			this.isValidSwitch = isValidSwitch;
+		/// <param name="option"></param>
+		/// <param name="argument"></param>
+		/// <param name="isValidOption"></param>
+		public OptionEventArgs(string @option, string argument, bool isValidOption) {
+			this.@option = @option;
+			this.argument = argument;
+			this.isValidOption = isValidOption;
 		}
 	}
 }

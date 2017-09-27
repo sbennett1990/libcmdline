@@ -44,16 +44,16 @@ namespace libcmdline {
 	/// See http://sanity-free.org/144/csharp_command_line_args_processing_class.html for more information.
 	/// </remarks>
 	public class CommandLineArgs {
-		public const string InvalidSwitchIdentifier = "INVALID";
+		public const string InvalidOptionIdentifier = "INVALID";
 
 		private IList<string> prefixRegexPatternList;
 		private IList<string> invalidArgs;
 		private IDictionary<string, string> arguments;
-		private IDictionary<string, EventHandler<CommandLineArgsMatchEventArgs>> handlers;
+		private IDictionary<string, EventHandler<OptionEventArgs>> handlers;
 
 		private bool ignoreCase;
 
-		public event EventHandler<CommandLineArgsMatchEventArgs> SwitchMatch;
+		public event EventHandler<OptionEventArgs> SwitchMatch;
 
 		/// <summary>
 		/// Create a new command line argument processor with default command line switch
@@ -63,7 +63,7 @@ namespace libcmdline {
 			prefixRegexPatternList = new List<string>();
 			invalidArgs = new List<string>();
 			arguments = new Dictionary<string, string>();
-			handlers = new Dictionary<string, EventHandler<CommandLineArgsMatchEventArgs>>();
+			handlers = new Dictionary<string, EventHandler<OptionEventArgs>>();
 			ignoreCase = false;
 
 			prefixRegexPatternList.Add("/{1}");
@@ -112,17 +112,17 @@ namespace libcmdline {
 		/// <summary>
 		///
 		/// </summary>
-		/// <param name="switchName"></param>
+		/// <param name="option"></param>
 		/// <param name="handler"></param>
-		public void RegisterSpecificSwitchMatchHandler(
-			string switchName,
-			EventHandler<CommandLineArgsMatchEventArgs> handler
+		public void RegisterOptionMatchHandler(
+			string option,
+			EventHandler<OptionEventArgs> handler
 		) {
-			if (handlers.ContainsKey(switchName)) {
-				handlers[switchName] = handler;
+			if (handlers.ContainsKey(option)) {
+				handlers[option] = handler;
 			}
 			else {
-				handlers.Add(switchName, handler);
+				handlers.Add(option, handler);
 			}
 		}
 
@@ -139,36 +139,36 @@ namespace libcmdline {
 					continue;
 				}
 
-				string arg = Regex.Replace(option, optionPattern, "", RegexOptions.Compiled);
+				string opt = Regex.Replace(option, optionPattern, "", RegexOptions.Compiled);
 
-				if (!handlers.ContainsKey(arg)) {
+				if (!handlers.ContainsKey(opt)) {
 					/* invalid argument */
-					onSwitchMatch(new CommandLineArgsMatchEventArgs(InvalidSwitchIdentifier, arg, false));
-					invalidArgs.Add(arg);
+					onOptionMatch(new OptionEventArgs(InvalidOptionIdentifier, opt, false));
+					invalidArgs.Add(opt);
 					continue;
 				}
 
-				if (arg.Contains("=")) {
+				if (opt.Contains("=")) {
 					/* switch style: "<prefix>Param=Value" */
-					int idx = arg.IndexOf('=');
-					string n = arg.Substring(0, idx);
-					string val = arg.Substring(idx + 1, arg.Length - n.Length - 1);
-					onSwitchMatch(new CommandLineArgsMatchEventArgs(n, val));
+					int idx = opt.IndexOf('=');
+					string n = opt.Substring(0, idx);
+					string val = opt.Substring(idx + 1, opt.Length - n.Length - 1);
+					onOptionMatch(new OptionEventArgs(n, val));
 					arguments.Add(n, val);
 				}
 				else {
 					/* switch style: "<prefix>Param Value" */
 					if ((i + 1) < args.Length) {
-						string @switch = arg;
+						string @switch = opt;
 						string val = args[i + 1];
-						onSwitchMatch(new CommandLineArgsMatchEventArgs(@switch, val));
-						arguments.Add(arg, val);
+						onOptionMatch(new OptionEventArgs(@switch, val));
+						arguments.Add(opt, val);
 
 						i++;
 					}
 					else {
-						onSwitchMatch(new CommandLineArgsMatchEventArgs(arg, null));
-						arguments.Add(arg, null);
+						onOptionMatch(new OptionEventArgs(opt, null));
+						arguments.Add(opt, null);
 					}
 				}
 			}
@@ -177,39 +177,39 @@ namespace libcmdline {
 		/// <summary>
 		///
 		/// </summary>
-		/// <param name="switchName"></param>
+		/// <param name="option"></param>
 		/// <returns></returns>
-		public bool HasHandler(string switchName) {
+		public bool HasHandler(string option) {
 			string scrubbed = string.Empty;
 			foreach (string prefix in prefixRegexPatternList) {
-				if (Regex.IsMatch(switchName, prefix, RegexOptions.Compiled)) {
-					scrubbed = Regex.Replace(switchName, prefix, "", RegexOptions.Compiled);
+				if (Regex.IsMatch(option, prefix, RegexOptions.Compiled)) {
+					scrubbed = Regex.Replace(option, prefix, "", RegexOptions.Compiled);
 					break;
 				}
 			}
 
 			if (ignoreCase) {
 				foreach (string key in arguments.Keys) {
-					if (key.ToLower() == switchName.ToLower()) {
+					if (key.ToLower() == option.ToLower()) {
 						return true;
 					}
 				}
 			}
 			else {
-				return handlers.ContainsKey(switchName);
+				return handlers.ContainsKey(option);
 			}
 
 			return false;
 		}
 
 		/// <summary>
-		/// Invoke the registered handler for the provided switch and value
-		/// (in the form of a CommandLineArgsMatchEventArgs object).
+		/// Invoke the registered handler for the provided option and argument
+		/// (in the form of a OptionEventArgs object).
 		/// </summary>
 		/// <param name="e"></param>
-		protected virtual void onSwitchMatch(CommandLineArgsMatchEventArgs e) {
-			if (handlers.ContainsKey(e.Switch) && handlers[e.Switch] != null) {
-				handlers[e.Switch](this, e);
+		protected virtual void onOptionMatch(OptionEventArgs e) {
+			if (handlers.ContainsKey(e.Option) && handlers[e.Option] != null) {
+				handlers[e.Option](this, e);
 			}
 			else if (SwitchMatch != null) {
 				SwitchMatch(this, e);

@@ -13,7 +13,7 @@ namespace test
         [TestCase("-a=testarg")]
         public void Option_WithArg(params string[] args)
         {
-            CommandLineArgs cmdline = new CommandLineArgs();
+            CommandLineProcessor cmdline = new CommandLineProcessor();
             cmdline.RegisterOptionMatchHandler("a", true, (sender, e) => { });
 
             cmdline.ProcessCommandLineArgs(args);
@@ -28,7 +28,7 @@ namespace test
         [TestCase("/a")]
         public void Option_NoArg_1(params string[] args)
         {
-            CommandLineArgs cmdline = new CommandLineArgs();
+            CommandLineProcessor cmdline = new CommandLineProcessor();
             cmdline.RegisterOptionMatchHandler("a", (sender, e) => { });
 
             cmdline.ProcessCommandLineArgs(args);
@@ -45,7 +45,7 @@ namespace test
         [TestCase("-b", "-a=testarg")]
         public void Option_NoArg_2(params string[] args)
         {
-            CommandLineArgs cmdline = new CommandLineArgs();
+            CommandLineProcessor cmdline = new CommandLineProcessor();
             cmdline.RegisterOptionMatchHandler("a", true, (sender, e) => { });
             cmdline.RegisterOptionMatchHandler("b", (sender, e) => { });
 
@@ -61,7 +61,7 @@ namespace test
         [TestCase("-a=testarg")]
         public void Invalid_Argument_1(params string[] args)
         {
-            CommandLineArgs cmdline = new CommandLineArgs();
+            CommandLineProcessor cmdline = new CommandLineProcessor();
             cmdline.RegisterOptionMatchHandler("a", (sender, e) => { });
 
             cmdline.ProcessCommandLineArgs(args);
@@ -75,7 +75,7 @@ namespace test
         [TestCase("-invalid", "-a", "testarg")]
         public void Invalid_Argument_2(params string[] args)
         {
-            CommandLineArgs cmdline = new CommandLineArgs();
+            CommandLineProcessor cmdline = new CommandLineProcessor();
             cmdline.RegisterOptionMatchHandler("a", true, (sender, e) => { });
 
             cmdline.ProcessCommandLineArgs(args);

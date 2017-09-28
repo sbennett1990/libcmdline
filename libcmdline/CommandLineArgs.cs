@@ -43,7 +43,7 @@ namespace libcmdline {
 	/// <remarks>
 	/// See http://sanity-free.org/144/csharp_command_line_args_processing_class.html for more information.
 	/// </remarks>
-	public class CommandLineArgs {
+	public class CommandLineProcessor {
 		public static readonly Option InvalidOptionIdentifier = new Option("INVALID");
 
 		private ISet<string> prefixRegexPatternList;
@@ -59,7 +59,7 @@ namespace libcmdline {
 		/// Create a new command line argument processor with default command line switch
 		/// prefixes.
 		/// </summary>
-		public CommandLineArgs() {
+		public CommandLineProcessor() {
 			prefixRegexPatternList = new SortedSet<string>();
 			invalidArgs = new List<string>();
 			processed = new Dictionary<Option, string>();

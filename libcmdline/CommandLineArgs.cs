@@ -44,12 +44,12 @@ namespace libcmdline {
 	/// See http://sanity-free.org/144/csharp_command_line_args_processing_class.html for more information.
 	/// </remarks>
 	public class CommandLineArgs {
-		public const string InvalidOptionIdentifier = "INVALID";
+		public static readonly Option InvalidOptionIdentifier = new Option("INVALID");
 
-		private IList<string> prefixRegexPatternList;
+		private ISet<string> prefixRegexPatternList;
 		private IList<string> invalidArgs;
-		private IDictionary<string, string> arguments;
-		private IDictionary<string, EventHandler<OptionEventArgs>> handlers;
+		private IDictionary<Option, string> processed;
+		private IDictionary<Option, EventHandler<OptionEventArgs>> handlers;
 
 		private bool ignoreCase;
 
@@ -60,10 +60,10 @@ namespace libcmdline {
 		/// prefixes.
 		/// </summary>
 		public CommandLineArgs() {
-			prefixRegexPatternList = new List<string>();
+			prefixRegexPatternList = new SortedSet<string>();
 			invalidArgs = new List<string>();
-			arguments = new Dictionary<string, string>();
-			handlers = new Dictionary<string, EventHandler<OptionEventArgs>>();
+			processed = new Dictionary<Option, string>();
+			handlers = new Dictionary<Option, EventHandler<OptionEventArgs>>();
 			ignoreCase = false;
 
 			prefixRegexPatternList.Add("/{1}");
@@ -75,7 +75,7 @@ namespace libcmdline {
 		/// </summary>
 		public int ArgCount {
 			get {
-				return arguments.Keys.Count;
+				return processed.Keys.Count;
 			}
 		}
 
@@ -101,9 +101,9 @@ namespace libcmdline {
 		}
 
 		/// <summary>
-		///
+		/// Collection of option prefix regex's.
 		/// </summary>
-		public IList<string> PrefixRegexPatternList {
+		public ISet<string> PrefixRegexPatternList {
 			get {
 				return prefixRegexPatternList;
 			}
@@ -118,58 +118,88 @@ namespace libcmdline {
 			string option,
 			EventHandler<OptionEventArgs> handler
 		) {
-			if (handlers.ContainsKey(option)) {
-				handlers[option] = handler;
+			RegisterOptionMatchHandler(option, false, handler);
+		}
+
+		/// <summary>
+		///
+		/// </summary>
+		/// <param name="option"></param>
+		/// <param name="requiresArgument"></param>
+		/// <param name="handler"></param>
+		public void RegisterOptionMatchHandler(
+			string option,
+			bool requiresArgument,
+			EventHandler<OptionEventArgs> handler
+		) {
+			Option opt = new Option(option, requiresArgument);
+
+			if (handlers.ContainsKey(opt)) {
+				handlers[opt] = handler;
 			}
 			else {
-				handlers.Add(option, handler);
+				handlers.Add(opt, handler);
 			}
 		}
 
 		/// <summary>
-		/// Take the command line arguments and attempt to execute the handlers.
+		/// Parse the command line arguments and attempt to execute the handlers.
 		/// </summary>
 		/// <param name="args">The arguments array</param>
 		public void ProcessCommandLineArgs(string[] args) {
 			for (int i = 0; i < args.Length; i++) {
-				string option = ignoreCase ? args[i].ToLower() : args[i];
-				string optionPattern = matchOptionPattern(option);
+				string argument = ignoreCase ? args[i].ToLower() : args[i];
+				string prefixPattern = matchOptionPattern(argument);
 
-				if (string.IsNullOrEmpty(optionPattern)) {
-					continue;
-				}
-
-				string opt = Regex.Replace(option, optionPattern, "", RegexOptions.Compiled);
-
-				if (!handlers.ContainsKey(opt)) {
+				if (string.IsNullOrEmpty(prefixPattern)) {
 					/* invalid argument */
-					onOptionMatch(new OptionEventArgs(InvalidOptionIdentifier, opt, false));
-					invalidArgs.Add(opt);
+					invalidArgs.Add(argument);
 					continue;
 				}
 
-				if (opt.Contains("=")) {
-					/* switch style: "<prefix>Param=Value" */
-					int idx = opt.IndexOf('=');
-					string n = opt.Substring(0, idx);
-					string val = opt.Substring(idx + 1, opt.Length - n.Length - 1);
-					onOptionMatch(new OptionEventArgs(n, val));
-					arguments.Add(n, val);
+				string opt;
+				string arg = string.Empty;
+				bool argPresent = false;
+
+				if (argument.Contains("=")) {
+					// TODO: handle case where there's nothing after the '='
+					/* argument style: "<prefix>Option=Argument" */
+					int idx = argument.IndexOf('=');
+					opt = argument.Substring(0, idx);
+					arg = argument.Substring((idx + 1), (argument.Length - opt.Length - 1));
+					argPresent = true;
 				}
 				else {
-					/* switch style: "<prefix>Param Value" */
+					/* argument style: "<prefix>Option Argument" */
+					/* or            : "<prefix>Option" */
+					opt = args[i];
 					if ((i + 1) < args.Length) {
-						string @switch = opt;
-						string val = args[i + 1];
-						onOptionMatch(new OptionEventArgs(@switch, val));
-						arguments.Add(opt, val);
+						if (!optionUpNext(args, i)) {
+							// The next item should be an argument
+							i++;
+							arg = args[i];
+							argPresent = true;
+						}
+					}
+				}
 
-						i++;
+				string scrubbedOpt = Regex.Replace(opt, prefixPattern, "", RegexOptions.Compiled);
+				Option option = new Option(scrubbedOpt, argPresent);
+
+				if (handlers.ContainsKey(option)) {
+					if (argPresent) {
+						onOptionMatch(new OptionEventArgs(option, arg));
+						processed.Add(option, arg);
 					}
 					else {
-						onOptionMatch(new OptionEventArgs(opt, null));
-						arguments.Add(opt, null);
+						onOptionMatch(new OptionEventArgs(option, null));
+						processed.Add(option, null);
 					}
+				}
+				else {
+					/* invalid argument: no handler */
+					onOptionMatch(new OptionEventArgs(InvalidOptionIdentifier, option.Opt, false));
+					invalidArgs.Add(option.Opt);
 				}
 			}
 		}
@@ -179,18 +209,18 @@ namespace libcmdline {
 		/// </summary>
 		/// <param name="option"></param>
 		/// <returns></returns>
-		public bool HasHandler(string option) {
+		public bool HasHandler(Option option) {
 			string scrubbed = string.Empty;
 			foreach (string prefix in prefixRegexPatternList) {
-				if (Regex.IsMatch(option, prefix, RegexOptions.Compiled)) {
-					scrubbed = Regex.Replace(option, prefix, "", RegexOptions.Compiled);
+				if (Regex.IsMatch(option.Opt, prefix, RegexOptions.Compiled)) {
+					scrubbed = Regex.Replace(option.Opt, prefix, "", RegexOptions.Compiled);
 					break;
 				}
 			}
 
 			if (ignoreCase) {
-				foreach (string key in arguments.Keys) {
-					if (key.ToLower() == option.ToLower()) {
+				foreach (Option key in processed.Keys) {
+					if (key.Opt.ToLower() == option.Opt.ToLower()) {
 						return true;
 					}
 				}
@@ -224,14 +254,37 @@ namespace libcmdline {
 		/// <param name="option"></param>
 		private string matchOptionPattern(string option) {
 			foreach (string prefix in prefixRegexPatternList) {
-				string optionPattern = $"^{prefix}";
+				string prefixPattern = $"^{prefix}";
 
-				if (Regex.IsMatch(option, optionPattern, RegexOptions.Compiled)) {
-					return optionPattern;
+				if (Regex.IsMatch(option, prefixPattern, RegexOptions.Compiled)) {
+					return prefixPattern;
 				}
 			}
 
 			return string.Empty;
+		}
+
+		/// <summary>
+		/// Look ahead in the args array to see if the next element is an
+		/// option. Returns true if the next element is a valid option,
+		/// false otherwise or if there is no next element.
+		/// </summary>
+		/// <param name="args"></param>
+		/// <param name="i"></param>
+		private bool optionUpNext(string[] args, int i) {
+			if ((i + 1) >= args.Length) {
+				return false;
+			}
+
+			string nextArg = args[i + 1];
+			string prefixPattern = matchOptionPattern(nextArg);
+
+			if (string.IsNullOrEmpty(prefixPattern)) {
+				return false;
+			}
+			else {
+				return true;
+			}
 		}
 	}
 }

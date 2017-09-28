@@ -21,16 +21,16 @@ namespace libcmdline {
 	/// Container for a command line option and its argument.
 	/// </summary>
 	public class OptionEventArgs : EventArgs {
-		private string @option;
+		private Option option;
 		private string argument;
 		private bool isValidOption = true;
 
 		/// <summary>
 		/// The command line option.
 		/// </summary>
-		public string Option {
+		public Option Option {
 			get {
-				return this.@option;
+				return this.option;
 			}
 		}
 
@@ -57,8 +57,8 @@ namespace libcmdline {
 		/// </summary>
 		/// <param name="option"></param>
 		/// <param name="argument"></param>
-		public OptionEventArgs(string @option, string argument) :
-			this(@option, argument, true) {
+		public OptionEventArgs(Option option, string argument) :
+			this(option, argument, true) {
 		}
 
 		/// <summary>
@@ -67,8 +67,8 @@ namespace libcmdline {
 		/// <param name="option"></param>
 		/// <param name="argument"></param>
 		/// <param name="isValidOption"></param>
-		public OptionEventArgs(string @option, string argument, bool isValidOption) {
-			this.@option = @option;
+		public OptionEventArgs(Option option, string argument, bool isValidOption) {
+			this.option = option;
 			this.argument = argument;
 			this.isValidOption = isValidOption;
 		}

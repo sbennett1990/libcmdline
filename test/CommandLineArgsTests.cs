@@ -11,10 +11,25 @@ namespace test
     {
         [TestCase("-a", "testarg")]
         [TestCase("-a=testarg")]
-        public void OptionWithArgTest(params string[] args)
+        public void Option_WithArg(params string[] args)
         {
             CommandLineArgs cmdline = new CommandLineArgs();
             cmdline.RegisterOptionMatchHandler("a", true, (sender, e) => { });
+
+            cmdline.ProcessCommandLineArgs(args);
+
+            Assert.That(cmdline.ArgCount, Is.EqualTo(1));
+
+            IEnumerable<string> emptylist = new List<string>(0);
+            Assert.That(cmdline.InvalidArgs, Is.EquivalentTo(emptylist));
+        }
+
+        [TestCase("-a")]
+        [TestCase("/a")]
+        public void Option_NoArg_1(params string[] args)
+        {
+            CommandLineArgs cmdline = new CommandLineArgs();
+            cmdline.RegisterOptionMatchHandler("a", (sender, e) => { });
 
             cmdline.ProcessCommandLineArgs(args);
 
@@ -28,7 +43,7 @@ namespace test
         [TestCase("-b", "-a", "testarg")]
         [TestCase("-a=testarg", "-b")]
         [TestCase("-b", "-a=testarg")]
-        public void OptionNoArgTest(params string[] args)
+        public void Option_NoArg_2(params string[] args)
         {
             CommandLineArgs cmdline = new CommandLineArgs();
             cmdline.RegisterOptionMatchHandler("a", true, (sender, e) => { });
@@ -44,7 +59,7 @@ namespace test
 
         [TestCase("-a", "testarg")]
         [TestCase("-a=testarg")]
-        public void InvalidArgumentTest(params string[] args)
+        public void Invalid_Argument_1(params string[] args)
         {
             CommandLineArgs cmdline = new CommandLineArgs();
             cmdline.RegisterOptionMatchHandler("a", (sender, e) => { });
@@ -54,6 +69,20 @@ namespace test
             Assert.That(cmdline.ArgCount, Is.EqualTo(0));
 
             Assert.That(cmdline.InvalidArgs, Is.Not.Empty);
+        }
+
+        [TestCase("-a", "testarg", "-invalid")]
+        [TestCase("-invalid", "-a", "testarg")]
+        public void Invalid_Argument_2(params string[] args)
+        {
+            CommandLineArgs cmdline = new CommandLineArgs();
+            cmdline.RegisterOptionMatchHandler("a", true, (sender, e) => { });
+
+            cmdline.ProcessCommandLineArgs(args);
+
+            Assert.That(cmdline.ArgCount, Is.EqualTo(1));
+
+            Assert.That(cmdline.InvalidArgs.Count, Is.EqualTo(1));
         }
     }
 }

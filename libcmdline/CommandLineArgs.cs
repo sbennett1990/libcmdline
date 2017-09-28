@@ -30,10 +30,10 @@ namespace libcmdline {
 	///			cmdArgs.IgnoreCase = true;
 	///			cmdArgs.PrefixRegexPatternList.Add("/{1}");
 	///			cmdArgs.PrefixRegexPatternList.Add("-{1,2}");
-	///			cmdArgs.RegisterSpecificSwitchMatchHandler("foo", (sender, e) => {
+	///			cmdArgs.RegisterOptionMatchHandler("foo", (sender, e) => {
 	///				// handle the /foo -foo or --foo switch logic here.
 	///				// this method will only be called for the foo switch.
-	///				// get the value given with the switch with e.Value
+	///				// get the argument given with the switch using e.Value
 	///			});
 	///			cmdArgs.ProcessCommandLineArgs(args);
 	///		}
@@ -71,7 +71,7 @@ namespace libcmdline {
 		}
 
 		/// <summary>
-		/// The number of arguments given on the command line.
+		/// The number of valid arguments given on the command line.
 		/// </summary>
 		public int ArgCount {
 			get {
@@ -197,7 +197,7 @@ namespace libcmdline {
 					}
 				}
 				else {
-					/* invalid argument: no handler */
+					/* invalid argument: no handler registered */
 					onOptionMatch(new OptionEventArgs(InvalidOptionIdentifier, option.Opt, false));
 					invalidArgs.Add(option.Opt);
 				}

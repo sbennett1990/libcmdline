@@ -38,7 +38,7 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CommandLineArgs.cs" />
+    <Compile Include="CommandLineProcessor.cs" />
     <Compile Include="Option.cs" />
     <Compile Include="OptionEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
